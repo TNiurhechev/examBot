@@ -6,7 +6,8 @@ import re
 import secrets
 from html import unescape
 from urllib.parse import urlparse
-
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Thread
 import requests
 from bs4 import BeautifulSoup
 from google import genai
@@ -27,7 +28,6 @@ GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 QUESTION_INTERVAL_MINUTES = int(os.getenv("QUESTION_INTERVAL_MINUTES", "30"))
 
-# Official Polish legal sources. Check/update these URLs when legislation changes.
 LEGAL_SOURCES = [
     {
         "title": "Ustawa o kierujących pojazdami — tekst jednolity, Dz.U. 2024 poz. 1210",
@@ -46,6 +46,32 @@ LEGAL_SOURCES = [
         "url": "https://eli.gov.pl/api/acts/DU/2019/1200/text.html",
     },
 ]
+
+
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path not in ("/", "/health"):
+            self.send_response(404)
+            self.end_headers()
+            return
+
+        body = b"OK"
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        pass
+
+
+def start_health_server():
+    port = int(os.environ.get("PORT", "10000"))
+    server = ThreadingHTTPServer(("0.0.0.0", port), HealthHandler)
+    Thread(target=server.serve_forever, daemon=True).start()
+    log.info("Health server listening on port %s", port)
 
 
 def clean_text(html: str) -> str:
@@ -366,6 +392,10 @@ def main():
         name="scheduled-questions",
     )
     log.info("Starting instructor exam trainer; interval=%s minutes", QUESTION_INTERVAL_MINUTES)
+    log.info("Starting instructor exam trainer; interval=%s minutes", QUESTION_INTERVAL_MINUTES)
+
+    start_health_server()
+
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
