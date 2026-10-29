@@ -4,6 +4,7 @@ import logging
 import asyncio
 import re
 import secrets
+import time
 from html import unescape
 from urllib.parse import urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -167,14 +168,34 @@ Jeśli nie możesz rzetelnie opracować pytania, zwróć wyłącznie:
 TEKSTY Z OFICJALNEGO ELI:
 {legal_context}
 """
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            temperature=0.35,
-        ),
-    )
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.35,
+                ),
+            )
+            break
+
+        except Exception as exc:
+            status = getattr(exc, "code", None)
+            if status is None:
+                status = getattr(exc, "status_code", None)
+
+            if status not in (429, 500, 503) or attempt == 2:
+                raise
+
+            delay = 2 ** (attempt + 1)
+            log.warning(
+                "Gemini returned HTTP %s; retrying in %s seconds "
+                "(attempt %s/3)",
+                status, delay, attempt + 2,
+            )
+            time.sleep(delay)
+
     data = json.loads(response.text)
     if data.get("error"):
         raise ValueError(f"Gemini nie wygenerował pytania: {data['error']}")
@@ -242,14 +263,25 @@ def question_keyboard(question_id: str, selected: set[int]) -> InlineKeyboardMar
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     context.application.bot_data["chat_id"] = chat_id
+    context.application.bot_data["scheduled_enabled"] = True
     await update.message.reply_text(
         "Cześć! Będę wysyłać pytania treningowe na instruktora nauki jazdy co "
         f"{QUESTION_INTERVAL_MINUTES} minut.\n\n"
-        "/now — nowe pytanie teraz\n\n"
+        "/now — nowe pytanie teraz\n"
+        "/stop — wyłącz regularne pytania\n"
+        "/start — włącz ponownie regularne pytania\n\n"
         "Po każdym restarcie bota wyślij /start, aby ponownie włączyć zaplanowane pytania.\n\n"
         "Pytania są generowane przez AI na podstawie pobranych tekstów z ELI. "
         "Sprawdzaj wskazane przepisy w aktualnym brzmieniu; pytania nie są oficjalnymi "
         "pytaniami egzaminacyjnymi."
+    )
+
+
+async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.application.bot_data["scheduled_enabled"] = False
+    await update.message.reply_text(
+        "Regularne pytania zostały wyłączone. Użyj /start, aby je ponownie włączyć. "
+        "Polecenie /now nadal działa."
     )
 
 
@@ -289,8 +321,11 @@ async def now(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def scheduled_question(context: ContextTypes.DEFAULT_TYPE):
-    # Chat ID is learned from /start and kept in memory; after a restart, send /start again.
+    # Chat ID and scheduling state are kept in memory; after a restart, send /start again.
     chat_id = context.application.bot_data.get("chat_id")
+    if not context.application.bot_data.get("scheduled_enabled", False):
+        log.info("Scheduled questions are disabled; skipping this interval.")
+        return
     if chat_id is None:
         log.info("No chat registered yet. Send /start to enable scheduled questions.")
         return
@@ -389,6 +424,7 @@ async def answer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("stop", stop))
     app.add_handler(CommandHandler("now", now))
     app.add_handler(CallbackQueryHandler(answer_callback, pattern=r"^(toggle|check):"))
     if app.job_queue is None:
