@@ -291,7 +291,6 @@ async def send_question_to_chat(chat_id: int, context: ContextTypes.DEFAULT_TYPE
         question_id = secrets.token_hex(4)
         state = get_state(context)
         state["questions"][question_id] = q
-        # Keep memory bounded; old inline buttons will no longer be answerable after pruning.
         while len(state["questions"]) > 100:
             oldest_id = next(iter(state["questions"]))
             state["questions"].pop(oldest_id, None)
@@ -321,7 +320,6 @@ async def now(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def scheduled_question(context: ContextTypes.DEFAULT_TYPE):
-    # Chat ID and scheduling state are kept in memory; after a restart, send /start again.
     chat_id = context.application.bot_data.get("chat_id")
     if not context.application.bot_data.get("scheduled_enabled", False):
         log.info("Scheduled questions are disabled; skipping this interval.")
