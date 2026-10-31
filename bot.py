@@ -152,6 +152,33 @@ dotyczące wyżej wykluczonych zagadnień. Jeśli nie możesz oprzeć pytania na
 przepisie dotyczącym ruchu drogowego, zwróć JSON z polem "error" zamiast tworzyć
 pytanie spoza dozwolonego zakresu.
 
+BEZWZGLĘDNE OGRANICZENIE ZAKRESU TEMATYCZNEGO:
+
+Pytania mają sprawdzać wyłącznie znajomość zasad ruchu drogowego oraz prawidłowego
+zachowania uczestników ruchu podczas poruszania się po drogach.
+
+NIE WOLNO tworzyć pytań dotyczących:
+- punktów karnych, ich naliczania, redukowania, usuwania ani kursów redukujących punkty;
+- mandatów, wysokości grzywien i procedur związanych z karaniem kierowców;
+- zatrzymywania, cofania ani przywracania prawa jazdy;
+- okresu próbnego, limitów punktów i konsekwencji administracyjnych naruszeń;
+- uzyskiwania uprawnień, egzaminów, szkoleń i kwalifikacji kierowców;
+- starostów, WORD, ewidencji kierowców i procedur administracyjnych;
+- pedagogiki, psychologii, metodyki nauczania ani pracy instruktora.
+
+WAŻNE: Sam fakt, że dane zagadnienie jest uregulowane w ustawie Prawo o ruchu
+drogowym lub wynika z naruszenia przepisów ruchu drogowego, NIE oznacza, że
+należy ono do dozwolonego zakresu tematycznego.
+
+Przykładowo pytanie o to, czy kierowca posiadający 22 punkty karne może
+uczestniczyć w kursie redukującym punkty, jest ZABRONIONE.
+
+PRZED ZWRÓCENIEM JSON sprawdź, czy pytanie dotyczy bezpośrednio zasad poruszania
+się po drodze, pierwszeństwa, wykonywania manewrów, znaków, sygnałów, zachowania
+uczestników ruchu lub bezpieczeństwa ruchu. Jeśli dotyczy któregokolwiek
+z wykluczonych zagadnień albo konsekwencji administracyjnych naruszeń,
+odrzuć je i wygeneruj inne pytanie.
+
 Zasady:
 - Całość pytania, odpowiedzi i wyjaśnienia napisz po polsku.
 - Zwróć dokładnie 4 odpowiedzi oznaczone A, B, C, D.
