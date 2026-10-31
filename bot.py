@@ -164,7 +164,19 @@ NIE WOLNO tworzyć pytań dotyczących:
 - okresu próbnego, limitów punktów i konsekwencji administracyjnych naruszeń;
 - uzyskiwania uprawnień, egzaminów, szkoleń i kwalifikacji kierowców;
 - starostów, WORD, ewidencji kierowców i procedur administracyjnych;
-- pedagogiki, psychologii, metodyki nauczania ani pracy instruktora.
+- pedagogiki, psychologii, metodyki nauczania ani pracy instruktora;
+- dokumentów potwierdzających uprawnienia do kierowania pojazdami, w tym
+  tymczasowego elektronicznego prawa jazdy, elektronicznego prawa jazdy,
+  fizycznego dokumentu prawa jazdy i międzynarodowego prawa jazdy;
+- zasad wydawania, odbioru, ważności, przedłużania i zakresu dokumentów
+  prawa jazdy;
+- momentu uzyskania uprawnień do kierowania pojazdami oraz warunków,
+  od których zależy możliwość legalnego rozpoczęcia kierowania pojazdem.
+  
+Rozróżniaj przepisy regulujące SPOSÓB poruszania się po drodze od przepisów
+regulujących PRAWO DO kierowania pojazdem. Dozwolona jest wyłącznie pierwsza
+kategoria. Pytania o to, kto, kiedy i na podstawie jakiego dokumentu może
+legalnie kierować pojazdem, są niedozwolone.
 
 WAŻNE: Sam fakt, że dane zagadnienie jest uregulowane w ustawie Prawo o ruchu
 drogowym lub wynika z naruszenia przepisów ruchu drogowego, NIE oznacza, że
