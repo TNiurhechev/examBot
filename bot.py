@@ -123,8 +123,8 @@ def generate_question() -> dict:
     legal_context = fetch_legal_context()
     client = genai.Client(api_key=GEMINI_API_KEY)
     prompt = f"""
-Jesteś autorem trudnych, rzetelnych pytań treningowych dla osoby przygotowującej się
- do polskiego egzaminu na instruktora nauki jazdy.
+Jesteś autorem trudnych, rzetelnych pytań treningowych dotyczących wyłącznie
+przepisów ruchu drogowego w Polsce.
 
 Przygotuj jedno wymagające pytanie oparte na dostarczonych tekstach oficjalnych aktów
 prawnych. Nie wybieraj pytania według z góry ustalonej listy tematów ani rotacji kategorii.
@@ -133,6 +133,24 @@ wiarygodnie brzmiących błędnych odpowiedziach oraz częstych nieporozumieniac
 Pytanie powinno opisywać konkretną sytuację/scenariusz, jeśli materiał prawny na to pozwala.
 Nie twierdź, że dany błąd rzeczywiście jest częsty na egzaminie, jeśli dostarczone źródła
 nie zawierają takich danych. Nie przedstawiaj pytania jako oficjalnego pytania egzaminacyjnego.
+
+Zakres tematyczny jest ściśle ograniczony do przepisów ruchu drogowego i praktycznych
+sytuacji na drodze. Pytania mogą dotyczyć m.in. pierwszeństwa przejazdu, skrzyżowań,
+znaków i sygnałów drogowych, wyprzedzania, omijania, wymijania, prędkości, zatrzymania
+i postoju, przejazdów kolejowych, zachowania wobec pieszych i rowerzystów, wykonywania
+manewrów oraz zachowania w szczególnych warunkach drogowych.
+
+Bezwzględnie wyklucz pytania dotyczące pedagogiki, psychologii, metodyki nauczania,
+prowadzenia zajęć, szkolenia kandydatów na kierowców, kwalifikacji instruktorów,
+uzyskiwania prawa jazdy, egzaminowania, ośrodków szkolenia kierowców, starostów,
+procedur administracyjnych oraz uprawnień zawodowych instruktorów. Nie twórz pytań
+o formalne wymagania dotyczące zawodu instruktora ani o organizację szkolenia.
+
+Wybieraj wyłącznie zagadnienia bezpośrednio związane z ruchem drogowym. Korzystaj
+z dostarczonych aktów prawnych jako źródeł przepisów, ale ignoruj ich fragmenty
+dotyczące wyżej wykluczonych zagadnień. Jeśli nie możesz oprzeć pytania na konkretnym
+przepisie dotyczącym ruchu drogowego, zwróć JSON z polem "error" zamiast tworzyć
+pytanie spoza dozwolonego zakresu.
 
 Zasady:
 - Całość pytania, odpowiedzi i wyjaśnienia napisz po polsku.
