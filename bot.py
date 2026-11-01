@@ -49,7 +49,6 @@ LEGAL_SOURCES = [
 ]
 
 
-
 class HealthHandler(BaseHTTPRequestHandler):
     def _send_health_response(self, include_body=True):
         if self.path not in ("/", "/health"):
@@ -105,7 +104,6 @@ def fetch_legal_context() -> str:
             )
             response.raise_for_status()
             text = clean_text(response.text)
-            # Bound the prompt size; this does not guarantee the relevant provision is included.
             blocks.append(
                 f"ŹRÓDŁO: {source['title']}\nURL: {source['url']}\nTEKST: {text[:26000]}"
             )
@@ -172,7 +170,7 @@ NIE WOLNO tworzyć pytań dotyczących:
   prawa jazdy;
 - momentu uzyskania uprawnień do kierowania pojazdami oraz warunków,
   od których zależy możliwość legalnego rozpoczęcia kierowania pojazdem.
-  
+
 Rozróżniaj przepisy regulujące SPOSÓB poruszania się po drodze od przepisów
 regulujących PRAWO DO kierowania pojazdem. Dozwolona jest wyłącznie pierwsza
 kategoria. Pytania o to, kto, kiedy i na podstawie jakiego dokumentu może
@@ -320,13 +318,14 @@ def question_keyboard(question_id: str, selected: set[int]) -> InlineKeyboardMar
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     context.application.bot_data["chat_id"] = chat_id
-    context.application.bot_data["scheduled_enabled"] = True
+    context.application.bot_data["question_mode"] = "scheduled"
     await update.message.reply_text(
         "Cześć! Będę wysyłać pytania treningowe na instruktora nauki jazdy co "
         f"{QUESTION_INTERVAL_MINUTES} minut.\n\n"
         "/now — nowe pytanie teraz\n"
-        "/stop — wyłącz regularne pytania\n"
-        "/start — włącz ponownie regularne pytania\n\n"
+        "/instant — nowe pytanie po każdej sprawdzonej odpowiedzi\n"
+        "/stop — wyłącz automatyczne pytania\n"
+        "/start — pytanie co określony czas\n\n"
         "Po każdym restarcie bota wyślij /start, aby ponownie włączyć zaplanowane pytania.\n\n"
         "Pytania są generowane przez AI na podstawie pobranych tekstów z ELI. "
         "Sprawdzaj wskazane przepisy w aktualnym brzmieniu; pytania nie są oficjalnymi "
@@ -335,10 +334,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.application.bot_data["scheduled_enabled"] = False
+    context.application.bot_data["question_mode"] = "off"
     await update.message.reply_text(
-        "Regularne pytania zostały wyłączone. Użyj /start, aby je ponownie włączyć. "
+        "Automatyczne pytania zostały wyłączone. Użyj /start lub /instant, aby je włączyć. "
         "Polecenie /now nadal działa."
+    )
+
+
+async def instant(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = update.effective_chat.id
+    context.application.bot_data["chat_id"] = chat_id
+    context.application.bot_data["question_mode"] = "after_answer"
+    await update.message.reply_text(
+        "Włączono tryb natychmiastowy: nowe pytanie pojawi się po każdej "
+        "sprawdzonej odpowiedzi. Tryb co 30 minut został wyłączony."
     )
 
 
@@ -371,6 +380,16 @@ async def send_question_to_chat(chat_id: int, context: ContextTypes.DEFAULT_TYPE
         )
 
 
+async def send_next_question_after_answer(
+    chat_id: int,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    if context.application.bot_data.get("question_mode") != "after_answer":
+        return
+
+    await send_question_to_chat(chat_id, context)
+
+
 async def now(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Przygotowuję pytanie…")
     await send_question_to_chat(update.effective_chat.id, context)
@@ -378,7 +397,7 @@ async def now(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def scheduled_question(context: ContextTypes.DEFAULT_TYPE):
     chat_id = context.application.bot_data.get("chat_id")
-    if not context.application.bot_data.get("scheduled_enabled", False):
+    if context.application.bot_data.get("question_mode", "off") != "scheduled":
         log.info("Scheduled questions are disabled; skipping this interval.")
         return
     if chat_id is None:
@@ -474,10 +493,12 @@ async def answer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode=ParseMode.HTML
         )
         await query.edit_message_reply_markup(reply_markup=None)
+        await send_next_question_after_answer(chat_id, context)
 
 
 def main():
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app.add_handler(CommandHandler("instant", instant))
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("stop", stop))
     app.add_handler(CommandHandler("now", now))
@@ -490,7 +511,6 @@ def main():
         first=15,
         name="scheduled-questions",
     )
-    log.info("Starting instructor exam trainer; interval=%s minutes", QUESTION_INTERVAL_MINUTES)
     log.info("Starting instructor exam trainer; interval=%s minutes", QUESTION_INTERVAL_MINUTES)
 
     start_health_server()
