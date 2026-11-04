@@ -11,8 +11,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 import requests
 from bs4 import BeautifulSoup
-from google import genai
-from google.genai import types
+from groq import Groq
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -25,10 +24,9 @@ logging.basicConfig(
 )
 log = logging.getLogger("instruktor-bot")
 TELEGRAM_BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GROQ_API_KEY = os.environ["GROQ_API_KEY"]
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 QUESTION_INTERVAL_MINUTES = int(os.getenv("QUESTION_INTERVAL_MINUTES", "30"))
-
 LEGAL_SOURCES = [
     {
         "title": "Ustawa o kierujących pojazdami — tekst jednolity, Dz.U. 2024 poz. 1210",
@@ -119,7 +117,8 @@ def fetch_legal_context() -> str:
 
 def generate_question() -> dict:
     legal_context = fetch_legal_context()
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    client = Groq(api_key=GROQ_API_KEY)
+
     prompt = f"""
 Jesteś autorem trudnych, rzetelnych pytań treningowych dotyczących wyłącznie
 przepisów ruchu drogowego w Polsce.
@@ -223,37 +222,46 @@ Jeśli nie możesz rzetelnie opracować pytania, zwróć wyłącznie:
 TEKSTY Z OFICJALNEGO ELI:
 {legal_context}
 """
+
     for attempt in range(3):
         try:
-            response = client.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.35,
-                ),
+            response = client.chat.completions.create(
+                model=GROQ_MODEL,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.35,
             )
             break
 
         except Exception as exc:
-            status = getattr(exc, "code", None)
-            if status is None:
-                status = getattr(exc, "status_code", None)
+            status = getattr(exc, "status_code", None)
 
-            if status not in (429, 500, 503) or attempt == 2:
+            if status not in (429, 500, 502, 503, 504) or attempt == 2:
                 raise
 
             delay = 2 ** (attempt + 1)
             log.warning(
-                "Gemini returned HTTP %s; retrying in %s seconds "
+                "Groq returned HTTP %s; retrying in %s seconds "
                 "(attempt %s/3)",
                 status, delay, attempt + 2,
             )
             time.sleep(delay)
 
-    data = json.loads(response.text)
+    content = response.choices[0].message.content
+
+    if not content:
+        raise ValueError("Groq returned an empty response")
+
+    data = json.loads(content)
+
     if data.get("error"):
-        raise ValueError(f"Gemini nie wygenerował pytania: {data['error']}")
+        raise ValueError(f"Groq nie wygenerował pytania: {data['error']}")
+
     validate_question(data)
     return data
 
@@ -350,8 +358,14 @@ async def instant(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "sprawdzonej odpowiedzi. Tryb co 30 minut został wyłączony."
     )
 
+    await send_question_to_chat(chat_id, context)
 
-async def send_question_to_chat(chat_id: int, context: ContextTypes.DEFAULT_TYPE):
+
+async def send_question_to_chat(
+    chat_id: int,
+    context: ContextTypes.DEFAULT_TYPE,
+    notify_error: bool = True,
+) -> bool:
     try:
         q = await asyncio.to_thread(generate_question)
         question_id = secrets.token_hex(4)
@@ -364,6 +378,7 @@ async def send_question_to_chat(chat_id: int, context: ContextTypes.DEFAULT_TYPE
             for key in list(state["answers"]):
                 if key[0] == oldest_id:
                     state["answers"].pop(key, None)
+
         await context.bot.send_message(
             chat_id=chat_id,
             text=format_question(q),
@@ -371,13 +386,17 @@ async def send_question_to_chat(chat_id: int, context: ContextTypes.DEFAULT_TYPE
             reply_markup=question_keyboard(question_id, set()),
             disable_web_page_preview=True,
         )
+        return True
+
     except Exception:
         log.exception("Could not generate/send question to %s", chat_id)
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="Nie udało się teraz przygotować pytania (problem z AI lub źródłem prawnym). "
-                 "Spróbuję przy kolejnej okazji. Możesz też użyć /now później.",
-        )
+        if notify_error:
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="Nie udało się teraz przygotować pytania (problem z AI lub źródłem prawnym). "
+                     "Spróbuję ponownie.",
+            )
+        return False
 
 
 async def send_next_question_after_answer(
@@ -387,7 +406,28 @@ async def send_next_question_after_answer(
     if context.application.bot_data.get("question_mode") != "after_answer":
         return
 
-    await send_question_to_chat(chat_id, context)
+    for attempt in range(3):
+        if await send_question_to_chat(
+            chat_id, context, notify_error=False
+        ):
+            return
+
+        if attempt < 2:
+            delay = 2 ** (attempt + 1)
+            log.warning(
+                "Instant mode: question generation failed; retrying in %s seconds "
+                "(attempt %s/3)",
+                delay, attempt + 2,
+            )
+            await asyncio.sleep(delay)
+
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text="Nie udało się przygotować pytania po 3 próbach. "
+             "Tryb natychmiastowy pozostaje aktywny — spróbuj użyć /now "
+             "lub odpowiedz na kolejne pytanie, jeśli jest dostępne.",
+    )
+
 
 
 async def now(update: Update, context: ContextTypes.DEFAULT_TYPE):
