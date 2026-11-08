@@ -211,35 +211,19 @@ regulujących PRAWO DO kierowania pojazdem. Dozwolona jest wyłącznie pierwsza
 kategoria. Pytania o to, kto, kiedy i na podstawie jakiego dokumentu może
 legalnie kierować pojazdem, są niedozwolone.
 
-WAŻNE: Sam fakt, że dane zagadnienie jest uregulowane w ustawie Prawo o ruchu
-drogowym lub wynika z naruszenia przepisów ruchu drogowego, NIE oznacza, że
-należy ono do dozwolonego zakresu tematycznego.
-
 Przykładowo pytanie o to, czy kierowca posiadający 22 punkty karne może
 uczestniczyć w kursie redukującym punkty, jest ZABRONIONE.
-
-PRZED ZWRÓCENIEM JSON sprawdź, czy pytanie dotyczy bezpośrednio zasad poruszania
-się po drodze, pierwszeństwa, wykonywania manewrów, znaków, sygnałów, zachowania
-uczestników ruchu lub bezpieczeństwa ruchu. Jeśli dotyczy któregokolwiek
-z wykluczonych zagadnień albo konsekwencji administracyjnych naruszeń,
-odrzuć je i wygeneruj inne pytanie.
 
 Zasady:
 - Całość pytania, odpowiedzi i wyjaśnienia napisz po polsku.
 - Zwróć dokładnie 4 odpowiedzi oznaczone A, B, C, D.
-- Od 1 do 3 odpowiedzi może być prawidłowych; nie ujawniaj liczby prawidłowych odpowiedzi
+- Od 1 do 4 odpowiedzi może być prawidłowych; nie ujawniaj liczby prawidłowych odpowiedzi
   w treści pytania.
 - Sprawdź precyzyjnie warunki, wyjątki i ograniczenia wynikające z przekazanych przepisów.
-- Każde twierdzenie prawne oraz każda wskazana podstawa prawna muszą być poparte tekstem
-  dostarczonych źródeł. Nie wymyślaj przepisów, numerów artykułów ani ich brzmienia.
+- Nie wymyślaj przepisów, numerów artykułów ani ich brzmienia.
 - Jeśli nie możesz przygotować pytania z wiarygodną i konkretną podstawą prawną na podstawie
   dostarczonych tekstów, nie zgaduj: zwróć JSON z polem "error" wyjaśniającym problem.
-- Podstawa prawna ma wskazywać pełną nazwę aktu, możliwie dokładny artykuł/ustęp/punkt,
-  oficjalny URL ELI oraz krótkie wyjaśnienie, jak przepis uzasadnia odpowiedź.
-- Wyjaśnij każdą odpowiedź osobno: dlaczego jest prawidłowa albo błędna. Zwróć uwagę na
-  konkretny szczegół scenariusza, który zmienia wynik lub stanowi pułapkę.
-- Nie przedstawiaj niezweryfikowanej opinii jako przepisu prawa. Jeśli źródło nie wystarcza,
-  wybierz inne pytanie.
+- Podstawa prawna ma wskazywać pełną nazwę aktu
 - Zwróć wyłącznie poprawny JSON, bez Markdown i bez komentarzy.
 
 Schemat JSON dla poprawnego pytania:
