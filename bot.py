@@ -90,28 +90,64 @@ def clean_text(html: str) -> str:
 
 def fetch_legal_context() -> str:
     blocks = []
-    for source in LEGAL_SOURCES:
+    max_chars = 10000
+    remaining = max_chars
+    sources = sorted(
+        LEGAL_SOURCES,
+        key=lambda s: "prawo o ruchu drogowym" not in s["title"].lower()
+    )
+
+    for source in sources:
+        if remaining <= 0:
+            break
+
         try:
             parsed = urlparse(source["url"])
             if parsed.scheme != "https" or parsed.netloc != "eli.gov.pl":
                 log.warning("Skipping non-ELI legal source: %s", source["url"])
                 continue
+
             response = requests.get(
-                source["url"], timeout=15,
+                source["url"],
+                timeout=15,
                 headers={"User-Agent": "InstruktorExamTrainer/1.0"},
             )
             response.raise_for_status()
+
             text = clean_text(response.text)
-            blocks.append(
-                f"ŹRÓDŁO: {source['title']}\nURL: {source['url']}\nTEKST: {text[:26000]}"
+
+            header = (
+                f"ŹRÓDŁO: {source['title']}\n"
+                f"URL: {source['url']}\nTEKST: "
             )
+
+            available = remaining - len(header)
+            if available <= 0:
+                break
+
+            text = text[:available]
+            block = header + text
+
+            blocks.append(block)
+            remaining -= len(block)
+
         except Exception as exc:
-            log.warning("Could not fetch legal source %s: %s", source["url"], exc)
+            log.warning(
+                "Could not fetch legal source %s: %s",
+                source["url"], exc
+            )
+
     if not blocks:
         raise RuntimeError(
             "Nie udało się pobrać żadnego tekstu z oficjalnego ELI. "
             "Nie generuję pytania bez podstawy prawnej."
         )
+
+    log.info(
+        "Legal context size: %s characters",
+        max_chars - remaining
+    )
+
     return "\n\n---\n\n".join(blocks)
 
 
