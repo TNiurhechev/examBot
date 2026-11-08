@@ -156,91 +156,135 @@ def generate_question() -> dict:
     client = Groq(api_key=GROQ_API_KEY)
 
     prompt = f"""
-Jesteś autorem trudnych, rzetelnych pytań treningowych dotyczących wyłącznie
-przepisów ruchu drogowego w Polsce.
+    Jesteś autorem trudnych, rzetelnych pytań treningowych dotyczących przepisów
+    ruchu drogowego w Polsce.
 
-Przygotuj jedno wymagające pytanie oparte na dostarczonych tekstach oficjalnych aktów
-prawnych. Nie wybieraj pytania według z góry ustalonej listy tematów ani rotacji kategorii.
-Skup się na trudnych przypadkach, wyjątkach od reguł, subtelnych rozróżnieniach prawnych,
-wiarygodnie brzmiących błędnych odpowiedziach oraz częstych nieporozumieniach pojęciowych.
-Pytanie powinno opisywać konkretną sytuację/scenariusz, jeśli materiał prawny na to pozwala.
-Nie twierdź, że dany błąd rzeczywiście jest częsty na egzaminie, jeśli dostarczone źródła
-nie zawierają takich danych. Nie przedstawiaj pytania jako oficjalnego pytania egzaminacyjnego.
+    Twoim zadaniem jest przygotowanie jednego wymagającego pytania sprawdzającego
+    praktyczną znajomość przepisów i prawidłowego zachowania uczestników ruchu.
 
-Zakres tematyczny jest ściśle ograniczony do przepisów ruchu drogowego i praktycznych
-sytuacji na drodze. Pytania mogą dotyczyć m.in. pierwszeństwa przejazdu, skrzyżowań,
-znaków i sygnałów drogowych, wyprzedzania, omijania, wymijania, prędkości, zatrzymania
-i postoju, przejazdów kolejowych, zachowania wobec pieszych i rowerzystów, wykonywania
-manewrów oraz zachowania w szczególnych warunkach drogowych.
+    Nie stosuj z góry ustalonej listy tematów ani rotacji kategorii. Samodzielnie
+    wybieraj zagadnienia, koncentrując się na trudnych sytuacjach drogowych,
+    wyjątkach od reguł, subtelnych różnicach prawnych, nieoczywistych przypadkach
+    i wiarygodnie brzmiących błędnych odpowiedziach.
 
-Bezwzględnie wyklucz pytania dotyczące pedagogiki, psychologii, metodyki nauczania,
-prowadzenia zajęć, szkolenia kandydatów na kierowców, kwalifikacji instruktorów,
-uzyskiwania prawa jazdy, egzaminowania, ośrodków szkolenia kierowców, starostów,
-procedur administracyjnych oraz uprawnień zawodowych instruktorów. Nie twórz pytań
-o formalne wymagania dotyczące zawodu instruktora ani o organizację szkolenia.
+    Pytanie powinno, jeśli to możliwe, przedstawiać konkretną sytuację drogową.
+    Nie twierdź, że dane zagadnienie jest częste na oficjalnym egzaminie bez
+    potwierdzenia w źródłach. Nie przedstawiaj pytania jako oficjalnego pytania
+    egzaminacyjnego.
 
-Wybieraj wyłącznie zagadnienia bezpośrednio związane z ruchem drogowym. Korzystaj
-z dostarczonych aktów prawnych jako źródeł przepisów, ale ignoruj ich fragmenty
-dotyczące wyżej wykluczonych zagadnień. Jeśli nie możesz oprzeć pytania na konkretnym
-przepisie dotyczącym ruchu drogowego, zwróć JSON z polem "error" zamiast tworzyć
-pytanie spoza dozwolonego zakresu.
+    ZAKRES TEMATYCZNY
 
-BEZWZGLĘDNE OGRANICZENIE ZAKRESU TEMATYCZNEGO:
+    Pytania mają dotyczyć wyłącznie zasad ruchu drogowego i zachowania uczestników
+    ruchu podczas poruszania się po drogach.
 
-Pytania mają sprawdzać wyłącznie znajomość zasad ruchu drogowego oraz prawidłowego
-zachowania uczestników ruchu podczas poruszania się po drogach.
+    Dozwolone zagadnienia obejmują między innymi:
+    - pierwszeństwo przejazdu i skrzyżowania;
+    - znaki, sygnały i polecenia drogowe;
+    - wyprzedzanie, omijanie i wymijanie;
+    - prędkość i dostosowanie jej do warunków;
+    - zatrzymanie i postój;
+    - przejazdy kolejowe i tramwajowe;
+    - zachowanie wobec pieszych, rowerzystów i innych uczestników ruchu;
+    - wykonywanie manewrów;
+    - szczególne warunki drogowe;
+    - obowiązki i zasady zachowania kierujących podczas jazdy.
 
-NIE WOLNO tworzyć pytań dotyczących:
-- punktów karnych, ich naliczania, redukowania, usuwania ani kursów redukujących punkty;
-- mandatów, wysokości grzywien i procedur związanych z karaniem kierowców;
-- zatrzymywania, cofania ani przywracania prawa jazdy;
-- okresu próbnego, limitów punktów i konsekwencji administracyjnych naruszeń;
-- uzyskiwania uprawnień, egzaminów, szkoleń i kwalifikacji kierowców;
-- starostów, WORD, ewidencji kierowców i procedur administracyjnych;
-- pedagogiki, psychologii, metodyki nauczania ani pracy instruktora;
-- dokumentów potwierdzających uprawnienia do kierowania pojazdami, w tym
-  tymczasowego elektronicznego prawa jazdy, elektronicznego prawa jazdy,
-  fizycznego dokumentu prawa jazdy i międzynarodowego prawa jazdy;
-- zasad wydawania, odbioru, ważności, przedłużania i zakresu dokumentów
-  prawa jazdy;
-- momentu uzyskania uprawnień do kierowania pojazdami oraz warunków,
-  od których zależy możliwość legalnego rozpoczęcia kierowania pojazdem.
+    Wyklucz zagadnienia dotyczące:
+    - punktów karnych, mandatów, grzywien i kar;
+    - zatrzymywania, cofania i przywracania prawa jazdy;
+    - okresu próbnego i administracyjnych konsekwencji naruszeń;
+    - uzyskiwania uprawnień, egzaminów i szkoleń kierowców;
+    - dokumentów prawa jazdy, w tym tymczasowych i międzynarodowych;
+    - kwalifikacji zawodowych instruktorów;
+    - pedagogiki, psychologii i metodyki nauczania;
+    - organizacji ośrodków szkolenia, WORD i procedur administracyjnych.
 
-Rozróżniaj przepisy regulujące SPOSÓB poruszania się po drodze od przepisów
-regulujących PRAWO DO kierowania pojazdem. Dozwolona jest wyłącznie pierwsza
-kategoria. Pytania o to, kto, kiedy i na podstawie jakiego dokumentu może
-legalnie kierować pojazdem, są niedozwolone.
+    Istotne rozróżnienie: pytania o SPOSÓB poruszania się po drodze są dozwolone.
+    Pytania o PRAWO DO kierowania pojazdem, dokumenty uprawniające do jazdy
+    i warunki uzyskania uprawnień są niedozwolone.
 
-Przykładowo pytanie o to, czy kierowca posiadający 22 punkty karne może
-uczestniczyć w kursie redukującym punkty, jest ZABRONIONE.
+    WYKORZYSTANIE ŹRÓDEŁ PRAWNYCH
 
-Zasady:
-- Całość pytania, odpowiedzi i wyjaśnienia napisz po polsku.
-- Zwróć dokładnie 4 odpowiedzi oznaczone A, B, C, D.
-- Od 1 do 4 odpowiedzi może być prawidłowych; nie ujawniaj liczby prawidłowych odpowiedzi
-  w treści pytania.
-- Sprawdź precyzyjnie warunki, wyjątki i ograniczenia wynikające z przekazanych przepisów.
-- Nie wymyślaj przepisów, numerów artykułów ani ich brzmienia.
-- Jeśli nie możesz przygotować pytania z wiarygodną i konkretną podstawą prawną na podstawie
-  dostarczonych tekstów, nie zgaduj: zwróć JSON z polem "error" wyjaśniającym problem.
-- Podstawa prawna ma wskazywać pełną nazwę aktu
-- Zwróć wyłącznie poprawny JSON, bez Markdown i bez komentarzy.
+    Dostarczone fragmenty oficjalnych aktów prawnych traktuj jako pomocniczy
+    materiał źródłowy. W pierwszej kolejności wykorzystuj zawarte w nich przepisy
+    dotyczące ruchu drogowego.
 
-Schemat JSON dla poprawnego pytania:
-{{
-  "question": "treść pytania / scenariusza",
-  "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
-  "correct_indices": [0, 2],
-  "explanation": "szczegółowe wyjaśnienie po polsku, w tym ocena każdej odpowiedzi",
-  "legal_basis": [{{"act": "pełna nazwa aktu", "provision": "art. X ust. Y pkt Z", "url": "https://eli.gov.pl/...", "relevance": "jak przepis uzasadnia odpowiedź"}}],
-  "verification_note": "uwaga o ograniczeniu lub konieczności sprawdzenia aktualności; w przeciwnym razie pusty tekst"
-}}
+    Nie wymagaj jednak, aby każdy przepis niezbędny do opracowania pytania
+    znajdował się dosłownie w dostarczonych fragmentach.
 
-Jeśli nie możesz rzetelnie opracować pytania, zwróć wyłącznie:
-{{"error": "krótkie wyjaśnienie"}}
+    Jeżeli dostarczony materiał jest niekompletny, nie zawiera odpowiedniego
+    przepisu albo obejmuje głównie inne zagadnienia, możesz wykorzystać swoją
+    wiedzę o polskich przepisach ruchu drogowego, w szczególności ustawie
+    Prawo o ruchu drogowym.
 
-TEKSTY Z OFICJALNEGO ELI:
-{legal_context}
+    Nie odrzucaj możliwości przygotowania pytania wyłącznie dlatego, że
+    przekazane fragmenty nie zawierają pełnego brzmienia odpowiedniego przepisu.
+
+    Podstawa prawna musi być rzeczywista i odpowiadać treści pytania.
+    Nie wymyślaj artykułów, ustępów, punktów, treści przepisów ani adresów URL.
+    Jeżeli nie masz pewności co do konkretnego przepisu, wybierz inne zagadnienie,
+    dla którego potrafisz wskazać wiarygodną podstawę prawną.
+
+    Nie wykorzystuj przepisów dotyczących wykluczonych zagadnień tylko dlatego,
+    że znajdują się w dostarczonym materiale.
+
+    ZASADY KONSTRUOWANIA PYTANIA
+
+    - Całość pytania, odpowiedzi i wyjaśnienia napisz po polsku.
+    - Zwróć dokładnie 4 odpowiedzi oznaczone A, B, C, D.
+    - Od 1 do 4 odpowiedzi może być prawidłowych.
+    - Nie ujawniaj liczby prawidłowych odpowiedzi w treści pytania.
+    - Odpowiedzi błędne powinny być wiarygodne, ale jednoznacznie nieprawidłowe.
+    - Zwróć szczególną uwagę na wyjątki, warunki i ograniczenia przepisów.
+    - Unikaj pytań banalnych, opartych wyłącznie na zapamiętywaniu definicji.
+    - Nie komplikuj pytań sztucznie przez dodawanie nieistotnych szczegółów.
+    - Wyjaśnij każdą odpowiedź osobno, wskazując, dlaczego jest prawidłowa
+      albo nieprawidłowa.
+    - Podstawa prawna powinna wskazywać pełną nazwę aktu oraz konkretny przepis.
+    - Jeśli nie ma pewności co do aktualności przepisu, zaznacz to w
+      verification_note zamiast automatycznie odrzucać całe pytanie.
+
+    BŁĄD GENEROWANIA
+
+    Pole "error" stosuj wyłącznie wtedy, gdy rzeczywiście nie jesteś w stanie
+    przygotować poprawnego pytania dotyczącego dozwolonego zakresu.
+
+    Nie zwracaj błędu wyłącznie z powodu:
+    - niekompletnych fragmentów prawnych;
+    - braku dosłownego brzmienia przepisu w dostarczonym materiale;
+    - obecności w materiale aktów prawnych niezwiązanych bezpośrednio z ruchem
+      drogowym;
+    - konieczności wykorzystania własnej wiedzy o przepisach ruchu drogowego.
+
+    FORMAT ODPOWIEDZI
+
+    Zwróć wyłącznie poprawny JSON, bez Markdown i bez dodatkowych komentarzy.
+
+    Schemat poprawnego pytania:
+
+    {{
+      "question": "treść pytania / scenariusza",
+      "options": ["A. ...", "B. ...", "C. ...", "D. ..."],
+      "correct_indices": [0, 2],
+      "explanation": "szczegółowe wyjaśnienie po polsku, w tym ocena każdej odpowiedzi",
+      "legal_basis": [
+        {{
+          "act": "pełna nazwa aktu",
+          "provision": "art. X ust. Y pkt Z",
+          "url": "https://eli.gov.pl/...",
+          "relevance": "jak przepis uzasadnia odpowiedź"
+        }}
+      ],
+      "verification_note": ""
+    }}
+
+    Jeśli rzeczywiście nie możesz przygotować poprawnego pytania, zwróć:
+
+    {{"error": "krótkie wyjaśnienie"}}
+
+    TEKSTY Z OFICJALNEGO ELI:
+
+    {legal_context}
 """
 
     for attempt in range(3):
