@@ -90,7 +90,7 @@ def clean_text(html: str) -> str:
 
 def fetch_legal_context() -> str:
     blocks = []
-    max_chars = 10000
+    max_chars = 7000
     remaining = max_chars
     sources = sorted(
         LEGAL_SOURCES,
